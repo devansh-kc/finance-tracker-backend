@@ -52,3 +52,17 @@ class UserTransations(models.Model):
     category = models.CharField(max_length=100)
     Date = models.DateField(auto_now=True)
     note = models.CharField(max_length=255)
+
+
+class budget(models.Model):
+    userUuid = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+    category = models.CharField(max_length=100)
+
+    monthlyLimit = models.DecimalField(max_digits=10, decimal_places=2)
+
+
+class goals(models.Model):
+    userUuid = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+    goalName = models.CharField(max_length=100)
+    targetAmount = models.DecimalField(max_digits=10, decimal_places=2)
+    currentSavings = models.DecimalField(max_digits=10, decimal_places=2)
