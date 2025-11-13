@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "financeTracker",
+    "rest_framework",
+    "rest_framework.authtoken",
 ]
 
 MIDDLEWARE = [
@@ -82,6 +84,13 @@ DATABASES = {
         "HOST": "localhost",  # Or the IP/hostname of your MySQL server
         "PORT": "3306",  # Default MySQL port
     }
+}
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.authentication",
+    ]
 }
 
 

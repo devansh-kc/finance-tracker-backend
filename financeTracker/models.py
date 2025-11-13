@@ -32,8 +32,11 @@ class SecurityQuestion(models.TextChoices):
     FAVORITE_GAME = "favorite_game", "What is your favorite game?"
 
 
+userAuthConst = "auth.User"
+
+
 class UserSecurity(models.Model):
-    user = models.OneToOneField("auth.User", on_delete=models.CASCADE)
+    user = models.OneToOneField(userAuthConst, on_delete=models.CASCADE)
     question = models.CharField(max_length=50, choices=SecurityQuestion.choices)
     answer = models.CharField(max_length=255)
 
@@ -47,7 +50,7 @@ class UserTransations(models.Model):
     transactionType = models.CharField(
         max_length=100, choices=TransactionType.choices, default=TransactionType.INCOME
     )
-    userUuid = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+    userUuid = models.ForeignKey(userAuthConst, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     category = models.CharField(max_length=100)
     Date = models.DateField(auto_now=True)
@@ -55,14 +58,14 @@ class UserTransations(models.Model):
 
 
 class budget(models.Model):
-    userUuid = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+    userUuid = models.ForeignKey(userAuthConst, on_delete=models.CASCADE)
     category = models.CharField(max_length=100)
 
     monthlyLimit = models.DecimalField(max_digits=10, decimal_places=2)
 
 
 class goals(models.Model):
-    userUuid = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+    userUuid = models.ForeignKey(userAuthConst, on_delete=models.CASCADE)
     goalName = models.CharField(max_length=100)
     targetAmount = models.DecimalField(max_digits=10, decimal_places=2)
     currentSavings = models.DecimalField(max_digits=10, decimal_places=2)
