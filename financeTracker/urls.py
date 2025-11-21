@@ -17,10 +17,15 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from .views import SignupCreateAPI, index
+from .views import SignupCreateAPI, index, SecurityQuestionsListView
 
 urlpatterns = [
     path("", index, name="home"),
     path("admin/", admin.site.urls),
-    path("signup/", SignupCreateAPI.as_view(), name="signup"),
+    path("api/signup/", SignupCreateAPI.as_view(), name="signup"),
+    path(
+        "api/security-questions/",
+        SecurityQuestionsListView.as_view(),
+        name="security-questions",
+    ),
 ]
