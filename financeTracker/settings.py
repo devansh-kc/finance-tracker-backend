@@ -37,12 +37,17 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "financeTracker",
     "rest_framework",
+    "corsheaders",
     "rest_framework.authtoken",
+    "apps.users",
+    "apps.transactions",
+    "apps.budgets",
+    "apps.goals",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -85,14 +90,37 @@ DATABASES = {
         "PORT": "3306",  # Default MySQL port
     }
 }
+# REST Framework configuration
 REST_FRAMEWORK = {
-    # Use Django's standard `django.contrib.auth` permissions,
-    # or allow read-only access for unauthenticated users.
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
+    ],
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.authentication",
-    ]
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
 }
 
+
+# CORS settings (for frontend communication)
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # React default
+    "http://localhost:5173",  # Vite default
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+]
+
+# Or for development, allow all (NOT for production!)
+# CORS_ALLOW_ALL_ORIGINS = True
+from os import path
+
+STATIC_URL = "/static/"
+STATIC_ROOT = path.join(BASE_DIR, "staticfiles")
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = path.join(BASE_DIR, "media")
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
