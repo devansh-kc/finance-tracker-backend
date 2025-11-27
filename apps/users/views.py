@@ -11,11 +11,8 @@ from rest_framework import status
 class SignupCreateAPI(APIView):
     permission_classes = [permissions.AllowAny]
 
-    def get(self, request):
-        print("request", request)
-        return Response({"message": "GET request to signup page"})
-
     def post(self, request):
+
         serilizer = UserSignupSerializer(data=request.data)
         if serilizer.is_valid():
             user = serilizer.save()

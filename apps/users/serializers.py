@@ -2,6 +2,10 @@ from rest_framework import serializers
 from .models import User, UserSecurity, SecurityQuestion
 from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
+from django.contrib.auth import get_user_model
+
+
+User = get_user_model()
 
 
 class UserSecuritySerilizer(serializers.ModelSerializer):
@@ -10,7 +14,7 @@ class UserSecuritySerilizer(serializers.ModelSerializer):
         fields = ("question", "answer")
 
     def validate_question(self, value):
-        if value in dict(UserSecurity.SecurityQuestion):
+        if value not in dict(SecurityQuestion.choices):
             raise serializers.ValidationError("Invalid security question.")
         return value
 
@@ -63,7 +67,6 @@ class UserSignupSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        print("validated_data", validated_data)
         security_data = validated_data.pop("security")
         validated_data.pop("password2")
         user = User.objects.create_user(**validated_data)
@@ -72,3 +75,4 @@ class UserSignupSerializer(serializers.ModelSerializer):
             question=security_data["question"],
             answer=security_data["answer"],
         )
+        return user
