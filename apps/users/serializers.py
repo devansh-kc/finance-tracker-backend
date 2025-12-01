@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
-class UserSecuritySerilizer(serializers.ModelSerializer):
+class UserSecuritySerializer(serializers.ModelSerializer):
     class Meta:
         model = UserSecurity
         fields = ("question", "answer")
@@ -17,6 +17,13 @@ class UserSecuritySerilizer(serializers.ModelSerializer):
         if value not in dict(SecurityQuestion.choices):
             raise serializers.ValidationError("Invalid security question.")
         return value
+
+    def validate_answer(self, value):
+        if not value or len(value.strip()) < 3:
+            raise serializers.ValidationError(
+                "Security answer must be at least 3 characters long."
+            )
+        return value.strip()
 
 
 class UserSignupSerializer(serializers.ModelSerializer):
@@ -29,7 +36,7 @@ class UserSignupSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(
         write_only=True, required=True, style={"input_type": "password"}
     )
-    security = UserSecuritySerilizer(required=True)
+    security = UserSecuritySerializer(required=True)
 
     class Meta:
         model = User
@@ -51,14 +58,15 @@ class UserSignupSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs["password"] != attrs["password2"]:
             raise serializers.ValidationError(
-                {"password": "Password fields didn't match."}
-            )
+                {"password2": "Password fields didn't match."}
+            )  # Show error on confirmation field
         return attrs
 
     def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Username already exists.")
-        return value
+        normalized_email = value.lower().strip()
+        if User.objects.filter(email__iexact=normalized_email).exists():
+            raise serializers.ValidationError("Email address already exists.")
+        return normalized_email
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
@@ -67,12 +75,18 @@ class UserSignupSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        security_data = validated_data.pop("security")
-        validated_data.pop("password2")
-        user = User.objects.create_user(**validated_data)
-        UserSecurity.objects.create(
-            user=user,
-            question=security_data["question"],
-            answer=security_data["answer"],
-        )
-        return user
+
+        try:
+            security_data = validated_data.pop("security")
+            validated_data.pop("password2")
+            user = User.objects.create_user(**validated_data)
+            UserSecurity.objects.create(
+                user=user,
+                question=security_data["question"],
+                answer=security_data["answer"],
+            )
+            return user
+        except Exception as error:
+            raise serializers.ValidationError(
+                "An error occurred while creating the user. Please try again.", error
+            )
