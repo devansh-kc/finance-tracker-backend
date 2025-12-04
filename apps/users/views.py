@@ -4,9 +4,11 @@ from .serializers import UserSignupSerializer, SecurityQuestion
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
-from .serializers import UserSignupSerializer
+from .serializers import UserSignupSerializer, UserLoginSerializer
 from rest_framework import status
 from utils.responses import standard_response
+from django.contrib.auth import authenticate
+from rest_framework.authtoken.models import Token
 
 
 class SignupCreateAPI(APIView):
@@ -20,15 +22,7 @@ class SignupCreateAPI(APIView):
             return standard_response(
                 success=True,
                 message="User created successfully",
-                data={
-                    "user": {
-                        "id": user.id,
-                        "username": user.username,
-                        "email": user.email,
-                        "first_name": user.first_name,
-                        "last_name": user.last_name,
-                    }
-                },
+                data=user,
                 status_code=status.HTTP_201_CREATED,
             )
         else:
@@ -53,3 +47,23 @@ class SecurityQuestionsListView(APIView):
             for choice in SecurityQuestion.choices
         ]
         return Response({"questions": questions}, status=status.HTTP_200_OK)
+
+
+class LoginAPIView(APIView):
+    def post(self, request):
+        username = request.data.get("username")
+        password = request.data.get("password")
+
+        serializer = UserLoginSerializer(data=request.data)
+
+        user = authenticate(username=username, password=password)
+        if user:
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({"token": token.key}, status=status.HTTP_200_OK)
+        else:
+            return standard_response(
+                success=False,
+                message=serializer.error_messages,
+                errors=serializer.errors,
+                status_code=status.HTTP_403_FORBIDDEN,
+            )

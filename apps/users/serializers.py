@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import User, UserSecurity, SecurityQuestion
 from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
+from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 
 
@@ -33,9 +34,6 @@ class UserSignupSerializer(serializers.ModelSerializer):
         validators=[validate_password],
         style={"input_type": "password"},
     )
-    password2 = serializers.CharField(
-        write_only=True, required=True, style={"input_type": "password"}
-    )
     security = UserSecuritySerializer(required=True)
 
     class Meta:
@@ -44,7 +42,6 @@ class UserSignupSerializer(serializers.ModelSerializer):
             "username",
             "email",
             "password",
-            "password2",
             "first_name",
             "last_name",
             "security",
@@ -54,13 +51,6 @@ class UserSignupSerializer(serializers.ModelSerializer):
             "last_name": {"required": False},
             "email": {"required": True},
         }
-
-    def validate(self, attrs):
-        if attrs["password"] != attrs["password2"]:
-            raise serializers.ValidationError(
-                {"password2": "Password fields didn't match."}
-            )  # Show error on confirmation field
-        return attrs
 
     def validate_email(self, value):
         normalized_email = value.lower().strip()
@@ -78,7 +68,6 @@ class UserSignupSerializer(serializers.ModelSerializer):
 
         try:
             security_data = validated_data.pop("security")
-            validated_data.pop("password2")
             user = User.objects.create_user(**validated_data)
             UserSecurity.objects.create(
                 user=user,
@@ -87,6 +76,21 @@ class UserSignupSerializer(serializers.ModelSerializer):
             )
             return user
         except Exception as error:
+
             raise serializers.ValidationError(
                 "An error occurred while creating the user. Please try again.", error
             )
+
+
+class UserLoginSerializer(serializers.ModelSerializer):
+    class Meta:
+        email = serializers.EmailField()
+        password = serializers.CharField(write_only=True)
+
+        def validateLoginCredentials(self, data):
+            user = authenticate(email=data["email"], password=data["password"])
+            if not user:
+                raise serializers.ValidationError("Invalid email or password")
+            data["user"] = user
+
+            return data
