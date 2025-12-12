@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password, check_password
 
 # Create your models here.
 
@@ -33,10 +34,24 @@ class SecurityQuestion(models.TextChoices):
     FAVORITE_GAME = "favorite_game", "What is your favorite game?"
 
 
-userAuthConst = "auth.User"
-
-
 class UserSecurity(models.Model):
-    user = models.OneToOneField(userAuthConst, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="security")
     question = models.CharField(max_length=50, choices=SecurityQuestion.choices)
     answer = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "User Security Question"
+        verbose_name_plural = "User Security Questions"
+
+    def set_answer(self, raw_answer):
+        """Hash and store the security answer (case-insensitive)"""
+        self.answer = make_password(raw_answer.lower().strip())
+
+    def check_answer(self, raw_answer):
+        """Verify the security answer (case-insensitive)"""
+        return check_password(raw_answer.lower().strip(), self.answer)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.get_question_display()}"

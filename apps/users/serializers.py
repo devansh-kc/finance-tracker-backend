@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, UserSecurity, SecurityQuestion
+from .models import UserSecurity, SecurityQuestion
 from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
 from django.contrib.auth import authenticate
@@ -67,6 +67,7 @@ class UserSignupSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
 
         try:
+
             security_data = validated_data.pop("security")
             user = User.objects.create_user(**validated_data)
             UserSecurity.objects.create(
@@ -76,21 +77,44 @@ class UserSignupSerializer(serializers.ModelSerializer):
             )
             return user
         except Exception as error:
-
+            print(error)
             raise serializers.ValidationError(
                 "An error occurred while creating the user. Please try again.", error
             )
 
 
 class UserLoginSerializer(serializers.ModelSerializer):
+
     class Meta:
-        email = serializers.EmailField()
-        password = serializers.CharField(write_only=True)
+        model = User
+        fields = (
+            "email",
+            "password",
+        )
 
-        def validateLoginCredentials(self, data):
-            user = authenticate(email=data["email"], password=data["password"])
-            if not user:
-                raise serializers.ValidationError("Invalid email or password")
-            data["user"] = user
+    def validate(self, attrs):
+        email = attrs.get("email")
+        password = attrs.get("password")
 
-            return data
+        if email and password:
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                raise serializers.ValidationError(
+                    "Unable to log in with provided credentials.", code="authorization"
+                )
+            if not user.check_password(password):
+                raise serializers.ValidationError(
+                    "Unable to log in with provided credentials.", code="authorization"
+                )
+            if not user.is_active:
+                raise serializers.ValidationError(
+                    "User account is disabled.", code="authorization"
+                )
+            attrs["user"] = user
+            print(attrs)
+            return attrs
+        else:
+            raise serializers.ValidationError(
+                'Must include "email" and "password".', code="authorization"
+            )
