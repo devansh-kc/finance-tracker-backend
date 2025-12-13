@@ -101,18 +101,17 @@ class UserLoginSerializer(serializers.ModelSerializer):
                 user = User.objects.get(email=email)
             except User.DoesNotExist:
                 raise serializers.ValidationError(
-                    "Unable to log in with provided credentials.", code="authorization"
+                    "User doesnt exitsts By the provided email.", code="authorization"
                 )
             if not user.check_password(password):
                 raise serializers.ValidationError(
-                    "Unable to log in with provided credentials.", code="authorization"
+                    "Incorrect password", code="authorization"
                 )
             if not user.is_active:
                 raise serializers.ValidationError(
                     "User account is disabled.", code="authorization"
                 )
             attrs["user"] = user
-            print(attrs)
             return attrs
         else:
             raise serializers.ValidationError(
