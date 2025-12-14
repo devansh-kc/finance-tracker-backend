@@ -9,6 +9,14 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "username", "email", "first_name", "last_name", "date_joined"]
+        # Or use fields = '__all__' for all fields
+        # Use exclude = ['password'] to exclude sensitive fields
+
+
 class UserSecuritySerializer(serializers.ModelSerializer):
     class Meta:
         model = UserSecurity

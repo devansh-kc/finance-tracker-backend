@@ -133,4 +133,29 @@ class LogoutAPIView(APIView):
 
 
 class DeleteUserAPIView(APIView):
-    pass
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, user_id):
+        try:
+            userData = User.objects.get(id=user_id)
+
+            userData.delete()
+
+            return standard_response(
+                success=True,
+                message="User deleted successfully",
+                status_code=status.HTTP_200_OK,
+            )
+        except User.DoesNotExist:
+            return standard_response(
+                success=False,
+                message="User not found",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as error:
+            return standard_response(
+                success=False,
+                message="Delete Error",
+                errors=str(error),
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
